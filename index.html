@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>First 12 Weeks — a gentle newborn care sim</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="src/style.css">
+
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="wk"><div id="wkLabel">Week 1 of 12</div><div id="wkTitle"></div></div>
+    <div class="clock"><span id="dayIcon" aria-hidden="true">☀️</span><span id="clock">07:00</span></div>
+    <div class="hdr-btns">
+      <button class="icon-btn" id="bPause" aria-label="Pause">❚❚</button>
+      <button class="icon-btn" id="bSpeed" aria-label="Game speed">1×</button>
+      <button class="icon-btn" id="bJournal" aria-label="Learning journal">📖</button>
+      <button class="icon-btn" id="bMenu" aria-label="Settings">⚙︎</button>
+    </div>
+  </header>
+  <div class="daybar" aria-hidden="true"><i id="dayFill"></i></div>
+
+  <div class="scene-wrap">
+    <svg id="scene" viewBox="0 0 360 240" role="img" aria-label="The nursery">
+      <defs>
+        <radialGradient id="glow"><stop offset="0" stop-color="#ffd98a" stop-opacity=".85"/><stop offset="1" stop-color="#ffd98a" stop-opacity="0"/></radialGradient>
+      </defs>
+      <!-- wall + floor -->
+      <rect width="360" height="185" fill="#f2e4d4"/>
+      <g opacity=".35" fill="#e6d2bd"><circle cx="30" cy="30" r="3"/><circle cx="95" cy="60" r="3"/><circle cx="60" cy="100" r="3"/><circle cx="265" cy="40" r="3"/><circle cx="330" cy="80" r="3"/><circle cx="300" cy="25" r="3"/></g>
+      <rect y="185" width="360" height="55" fill="#e3cdb4"/>
+      <rect y="181" width="360" height="5" fill="#d8bfa3"/>
+      <!-- window -->
+      <rect x="128" y="22" width="104" height="80" rx="6" fill="#d2b89c"/>
+      <rect id="sky" x="133" y="27" width="94" height="70" rx="3" fill="#bfe0f2"/>
+      <circle id="sun" cx="205" cy="48" r="9" fill="#ffd36b"/>
+      <g id="stars" fill="#fff" opacity="0"><circle cx="150" cy="40" r="1.2"/><circle cx="170" cy="60" r="1"/><circle cx="190" cy="36" r="1.3"/><circle cx="215" cy="70" r="1"/><circle cx="160" cy="80" r="1.1"/></g>
+      <rect x="179" y="27" width="2.5" height="70" fill="#d2b89c"/>
+      <rect x="133" y="60" width="94" height="2.5" fill="#d2b89c"/>
+      <path d="M122 18 h20 q-6 45 4 92 h-24z" fill="#e9b9a3"/>
+      <path d="M238 18 h-20 q6 45 -4 92 h24z" fill="#e9b9a3"/>
+      <rect x="118" y="14" width="124" height="5" rx="2.5" fill="#b9977a"/>
+      <!-- changing table -->
+      <rect x="14" y="128" width="88" height="8" rx="3" fill="#c99f7a"/>
+      <rect x="18" y="136" width="6" height="52" fill="#b98f6a"/><rect x="92" y="136" width="6" height="52" fill="#b98f6a"/>
+      <rect x="18" y="160" width="80" height="5" fill="#c99f7a"/>
+      <rect x="20" y="118" width="60" height="11" rx="5" fill="#cfe0ee"/>
+      <g fill="#fff" stroke="#e1d6c8"><rect x="30" y="150" width="16" height="10" rx="2"/><rect x="48" y="150" width="16" height="10" rx="2"/><rect x="39" y="141" width="16" height="10" rx="2"/></g>
+      <!-- lamp -->
+      <circle id="lampGlow" cx="91" cy="104" r="40" fill="url(#glow)" opacity="0"/>
+      <rect x="89" y="112" width="4" height="16" fill="#a07e62"/>
+      <path d="M81 112 l6 -14 h8 l6 14z" fill="#f4d9a8"/>
+      <!-- rug -->
+      <ellipse cx="180" cy="208" rx="78" ry="19" fill="#e9c9b6"/>
+      <ellipse cx="180" cy="208" rx="62" ry="13" fill="none" stroke="#f2dccd" stroke-width="3"/>
+      <!-- mobile -->
+      <line x1="297" y1="0" x2="297" y2="18" stroke="#b9977a" stroke-width="1.5"/>
+      <g class="mobile-toy">
+        <line x1="277" y1="18" x2="317" y2="18" stroke="#b9977a" stroke-width="1.5"/>
+        <line x1="279" y1="18" x2="279" y2="36" stroke="#b9977a"/><line x1="297" y1="18" x2="297" y2="44" stroke="#b9977a"/><line x1="315" y1="18" x2="315" y2="34" stroke="#b9977a"/>
+        <path d="M279 36 l4 7 h-8z" fill="#e6a77f"/><circle cx="297" cy="47" r="4" fill="#9cbcd9"/><path d="M315 34 m-5 0 a5 5 0 0 0 10 0z" fill="#f0cf7a"/>
+      </g>
+      <!-- crib back -->
+      <rect x="246" y="96" width="104" height="72" rx="4" fill="#faf3e9" stroke="#d9c3a8" stroke-width="2"/>
+      <g stroke="#e1cfb7" stroke-width="3">
+        <line x1="258" y1="100" x2="258" y2="164"/><line x1="271" y1="100" x2="271" y2="164"/><line x1="284" y1="100" x2="284" y2="164"/><line x1="297" y1="100" x2="297" y2="164"/><line x1="310" y1="100" x2="310" y2="164"/><line x1="323" y1="100" x2="323" y2="164"/><line x1="336" y1="100" x2="336" y2="164"/>
+      </g>
+      <rect x="250" y="158" width="96" height="9" fill="#ffffff" stroke="#e5d8c7"/>
+      <!-- baby -->
+      <g id="babyPos"><g id="baby"></g></g>
+      <!-- crib front rail -->
+      <rect x="244" y="164" width="108" height="8" rx="3" fill="#d9c3a8"/>
+      <rect x="244" y="92" width="8" height="98" rx="3" fill="#cdb393"/>
+      <rect x="344" y="92" width="8" height="98" rx="3" fill="#cdb393"/>
+      <g id="fx"></g>
+      <rect id="night" width="360" height="240" fill="#1d2647" opacity="0" pointer-events="none"/>
+    </svg>
+    <div id="helperBanner" hidden>🤝 Your helper is on shift — you're resting.</div>
+  </div>
+
+  <section class="cue" aria-live="polite">
+    <div class="cue-h"><span id="cueTag">What you notice</span><span id="cueLvl" class="lvl calm">Calm</span></div>
+    <p id="cueText"></p>
+  </section>
+
+  <div class="energy"><span>Your energy</span><div class="bar"><i id="eFill"></i></div><span id="eNum">85</span></div>
+  <div id="meters" hidden></div>
+
+  <div id="toasts" aria-live="polite"></div>
+
+  <nav class="actions" id="actions"></nav>
+  <footer>Educational prototype · not medical advice · <a href="#" id="aboutLink">About &amp; sources</a></footer>
+</div>
+
+<div id="overlay" hidden><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
+
+<script src="src/content.js"></script>
+<script src="src/game.js"></script>
+</body>
+</html>

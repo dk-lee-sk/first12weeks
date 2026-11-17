@@ -1,0 +1,14 @@
+{
+  "name": "first-12-weeks",
+  "version": "0.1.0",
+  "description": "A gentle, no-fail newborn care learning game for soon-to-be parents.",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "start": "npx --yes serve -l 4173 .",
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.0"
+  }
+}
