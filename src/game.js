@@ -22,6 +22,11 @@ function cfg(w){
   purple: (w>=5&&w<=8)?0.012 : (w>=3&&w<=10)?0.004 : 0,
   nap:[30, 55+w*4],
   night:[90+w*10, 150+w*20],
+  // Parent energy: strain scales passive drain and the cost of each care action.
+  // It rises with the crying peak (weeks 5–8) and eases either side. Rest recovers
+  // energy more slowly than a real night's sleep because naps are short and broken.
+  strain: (w>=5&&w<=8)?1.5 : (w>=3&&w<=10)?1.25 : 1,
+  restRate: 0.15,
  };
 }
 
@@ -112,8 +117,8 @@ function stepMinute(){
   if(S.helper===0) toast('Your helper hands baby back. You got some real rest.','ok');
  }
  if(S.helper>0) p.energy=clamp(p.energy+0.3);
- else if(p.resting&&b.asleep) p.energy=clamp(p.energy+0.18);
- else p.energy=clamp(p.energy-(night?0.12:0.05));
+ else if(p.resting&&b.asleep) p.energy=clamp(p.energy+c.restRate);
+ else p.energy=clamp(p.energy-(night?0.12:0.05)*c.strain);
  if(p.energy<20&&!S.flags.lowE){S.flags.lowE=true; toast('You’re running on empty. Rest when baby sleeps, or ask for help — that’s part of the job, not a failure.','learn'); learn('help');}
  if(S.min>=1440) S.dayOver=true;
 }
@@ -197,7 +202,7 @@ function act(k){
  const msg=r.msg+(judge==='wrong'?'<br>'+LESSON[t.k]:'');
  toast(msg,judge==='right'?'ok':judge==='wrong'?'learn':'info',true);
  popFx(FX[k]);
- S.p.energy=clamp(S.p.energy-(isNight()?2:0.5));
+ S.p.energy=clamp(S.p.energy-(isNight()?2:0.5)*cfg(S.week).strain);
  if(r.dur) advance(r.dur,k);
  render(); save();
 }

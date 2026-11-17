@@ -27,7 +27,7 @@ tests/            Playwright: content integrity + full 12-week bot season
 - Plain classic scripts so `index.html` opens straight from disk. Don't add a bundler or framework unless a roadmap item clearly needs one.
 - Time model: `S.min` counts game minutes from 07:00 (1440 per day). One real second is 5 game minutes × speed, ×4 while resting or while a helper is on shift.
 - Needs: `needs()` turns baby state into cue strengths 0–100. `top()` is the strongest cue ≥35. Levels: early <60, mid <85, late (crying) ≥85.
-- Balance knobs live in `cfg(week)` in `game.js` (feed interval, awake window, feed length, crying-peak probability, nap and night lengths).
+- Balance knobs live in `cfg(week)` in `game.js` (feed interval, awake window, feed length, crying-peak probability, nap and night lengths, parent `strain` and `restRate`).
 - `window.__F12` exposes state and functions for tests. Keep it.
 - Save: `localStorage` key `first12weeks.v1`, always wrapped in try/catch. Bump the version key whenever you change the state shape.
 
@@ -35,6 +35,7 @@ tests/            Playwright: content integrity + full 12-week bot season
 Per in-game day, with the reference bot:
 - Feeds 8–14 · baby sleep 12–18 h · wet nappies ≥5
 - Crying minutes: low outside weeks 5–8, visible rise during the peak
+- Parent energy at end of day (bot rests whenever baby sleeps): ≥25 every week, ≤60 in weeks 5–8, and avg of weeks 5–8 at least 10 below weeks 1–4 and 25 below weeks 9–12. Resting beats not resting, and asking for help beats resting alone.
 - No page errors. The season reaches the finale and unlocks ≥18 cards.
 
 ## Commands
