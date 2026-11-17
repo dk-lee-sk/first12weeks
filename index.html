@@ -10,6 +10,7 @@
 
 </head>
 <body>
+<div class="shell">
 <div class="app">
   <header>
     <div class="wk"><div id="wkLabel">Week 1 of 12</div><div id="wkTitle"></div></div>
@@ -88,16 +89,20 @@
 
   <div class="energy"><span>Your energy</span><div class="bar"><i id="eFill"></i></div><span id="eNum">85</span></div>
   <div id="meters" hidden></div>
+  <button class="health-strip" id="bHealth" aria-label="Open baby’s health: weight, length and today’s tallies"><span class="hs-ic" aria-hidden="true">🩺</span><span class="hs-t"><span class="hs-k">Baby</span> <b id="hsText"></b></span><span class="hs-go">Health ›</span></button>
 
   <div id="toasts" aria-live="polite"></div>
 
   <nav class="actions" id="actions"></nav>
   <footer>Educational prototype · not medical advice · <a href="#" id="aboutLink">About &amp; sources</a></footer>
 </div>
+<aside class="side" id="healthSide" aria-label="Baby’s health"></aside>
+</div>
 
 <div id="overlay" hidden><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
 
 <script src="src/content.js"></script>
+<script src="src/growth.js"></script>
 <script src="src/game.js"></script>
 </body>
 </html>

@@ -27,12 +27,14 @@ const CARDS = [
  {id:'sleephours', t:'How much do newborns sleep?', b:'Roughly 14–17 hours in 24 hours, in short stretches spread across day and night.', s:'National Sleep Foundation'},
  {id:'nights', t:'Night waking is normal', b:'Short stretches and night feeds are normal for months. Some babies sleep longer stretches by around 3 months — the range of normal is wide.', s:'AAP (HealthyChildren.org)'},
  {id:'talk', t:'Talk, sing, narrate', b:'Talking and singing to your baby — even narrating your day — supports early language and bonding. Pause and let them “answer” with coos.', s:'CDC, AAP'},
+ {id:'weightloss', t:'Early weight loss is normal', b:'Most babies lose a little weight in the first few days and are back to their birth weight by about 2–3 weeks (sources vary). Your midwife or health visitor will weigh baby and support you. If you’re worried about feeding or weight, contact them.', s:'NHS (nhs.uk, Your baby’s weight and height)'},
+ {id:'growth', t:'Growth charts: your baby’s own curve', b:'Percentile (centile) charts compare weight, length and head size with many other babies of the same age. There is no “best” percentile: healthy babies track along their own line, and the pattern over time matters more than one reading. If you’re worried about growth, talk to your midwife, health visitor or doctor.', s:'WHO Child Growth Standards; NHS; AAP (HealthyChildren.org)'},
  {id:'help', t:'Accepting help is the job', b:'Rest when baby sleeps, split night duties, and say yes to offers of food or a shift. A rested parent is a calmer, safer parent.', s:'NHS'},
 ];
 
 const WEEKS = {
- 1:{t:'Welcome home', n:['Feeds come every 2–3 hours, day and night.','The cord stump is still on — sponge baths only.','Your mission: spot hunger cues before the crying starts.'], c:['feeds']},
- 2:{t:'No rhythm yet (that’s normal)', n:['Evening cluster feeding is common.','Weepy or overwhelmed? The “baby blues” often show up around now.'], c:['blues']},
+ 1:{t:'Welcome home', n:['Feeds come every 2–3 hours, day and night.','The cord stump is still on — sponge baths only.','Your mission: spot hunger cues before the crying starts.','Check the new health panel: baby’s weight usually dips a little in the first days.'], c:['feeds','weightloss']},
+ 2:{t:'No rhythm yet (that’s normal)', n:['Evening cluster feeding is common.','Weepy or overwhelmed? The “baby blues” often show up around now.','Baby is back to birth weight or close to it. Healthy babies follow their own growth curve.'], c:['blues','growth']},
  3:{t:'Growth spurt', n:['A growth spurt can make baby hungrier for a few days.','Try short tummy time when baby is calm and alert.','Know this one by heart: fever rules under 3 months.'], c:['fever']},
  4:{t:'Awake a little longer', n:['Awake windows stretch a bit; baby notices more.','Tired signs get easier to read — catch them early.'], c:['tired','sleephours']},
  5:{t:'The fussy weeks begin', n:['Crying tends to build toward a peak around 6–8 weeks.','Some evening crying has no cause you can fix.'], c:['nevershake']},

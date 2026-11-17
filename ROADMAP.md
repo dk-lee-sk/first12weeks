@@ -8,6 +8,7 @@ One room, 9 actions, cue system, 12 weeks, 24 learning cards, daily summaries, e
 ## M1 — Foundation 🔜
 - ✅ Split into content / logic / styles; CLAUDE.md; seeded Playwright season test; CI; GitHub Pages deploy.
 - ✅ Energy balance: the reference bot used to end most days at 80–100 energy. Now `cfg(week).strain` (passive drain and per-action cost, ×1.5 in weeks 5–8, ×1.25 in weeks 3–4 and 9–10) and `cfg(week).restRate` (0.15/min) make tiredness bite in the crying peak. The reference bot ends weeks 5–8 at about 35–60, and weeks 1–4 at 55–70. Weeks 9–12 recover to 90+. Resting and asking for help each make a measurable difference (tested in `tests/season.spec.js`). Still to do: move these knobs into `src/balance.js` with the real-world basis.
+- ✅ Health panel: weight, length and head vs WHO percentiles, plus today's feeds, nappies, sleep and tummy time. Two new learning cards (`weightloss`, `growth`), marked **pending clinical review**. Later: a unit toggle (kg/cm vs lb/in), a growth chart across the 12 weeks, and a choice of sex-specific curves in M2.
 - 🔜 Move balance constants from `cfg()` into `src/balance.js` with comments citing the real-world basis.
 - 🔜 Add source URLs to every card (`url` field) and show them as links in the journal.
 - 🔜 Accessibility pass: focus order, visible focus, `prefers-reduced-motion`, colour contrast ≥4.5:1.

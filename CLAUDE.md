@@ -21,15 +21,17 @@ A no-fail, open-source learning game for expecting parents. One nursery, one new
 index.html        markup + SVG nursery scene
 src/style.css     all styles (CSS variables at :root)
 src/content.js    CARDS, WEEKS, CUES, LESSON  → window.F12_CONTENT
-src/game.js       state, simulation (stepMinute), actions (EFF), rendering, modals
-tests/            Playwright: content integrity + full 12-week bot season
+src/growth.js     WHO growth tables (weight, length, head; weeks 0–13) and the baby's growth model → window.F12_GROWTH
+src/game.js       state, simulation (stepMinute), actions (EFF), rendering, modals, health panel
+tests/            Playwright: content integrity, growth data + health panel, full 12-week bot season
 ```
 - Plain classic scripts so `index.html` opens straight from disk. Don't add a bundler or framework unless a roadmap item clearly needs one.
 - Time model: `S.min` counts game minutes from 07:00 (1440 per day). One real second is 5 game minutes × speed, ×4 while resting or while a helper is on shift.
 - Needs: `needs()` turns baby state into cue strengths 0–100. `top()` is the strongest cue ≥35. Levels: early <60, mid <85, late (crying) ≥85.
 - Balance knobs live in `cfg(week)` in `game.js` (feed interval, awake window, feed length, crying-peak probability, nap and night lengths, parent `strain` and `restRate`).
 - `window.__F12` exposes state and functions for tests. Keep it.
-- Save: `localStorage` key `first12weeks.v1`, always wrapped in try/catch. Bump the version key whenever you change the state shape.
+- Save: `localStorage` key `first12weeks.v2`, always wrapped in try/catch. Bump the version key whenever you change the state shape. (v2 added `S.g`, the baby's growth profile; v1 saves are ignored.)
+- Health panel: weight, length and head from `src/growth.js` (WHO percentile tables copied exactly, boys and girls averaged so there is no sex assumption), plus today's feeds, nappies, sleep, tummy time and baths. Phone: a strip under the energy bar opens a sheet. Wide screens (≥900px): a live side panel. Week 1 weight dips a little below birth weight (a game choice, noted in `growth.js`) and shows no percentile until week 2. `growth.js` must never call `Math.random` or the seeded balance test shifts; it uses `crypto` for the baby's profile.
 
 ## Balance targets (checked by `tests/season.spec.js`)
 Per in-game day, with the reference bot:

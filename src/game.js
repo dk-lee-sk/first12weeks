@@ -2,8 +2,9 @@
 'use strict';
 /* First 12 Weeks — game loop, simulation and rendering. Content lives in content.js. */
 const START_HOUR = 7;
-const SAVE_KEY = 'first12weeks.v1';
+const SAVE_KEY = 'first12weeks.v2'; // v2: added the baby's growth profile (S.g)
 const {CARDS, WEEKS, CUES, LESSON} = window.F12_CONTENT;
+const G = window.F12_GROWTH;
 const CARD = Object.fromEntries(CARDS.map(c=>[c.id,c]));
 
 const MAP = {hunger:'feed', sleep:'sleep', diaper:'change', gas:'burp', purple:'soothe', bath:'bath', bored:'play'};
@@ -35,10 +36,10 @@ const rand=(a,b)=>a+Math.random()*(b-a);
 const clamp=(v,a=0,b=100)=>Math.max(a,Math.min(b,v));
 const freshStats=()=>({feeds:0,wet:0,dirty:0,sleep:0,right:0,cues:0,tummy:0,baths:0,helps:0,cry:0});
 function freshBaby(){return {hunger:45,sleepy:15,diaper:null,dAge:0,gas:0,sinceFeed:150,hyg:45,asleep:false,sleepLeft:0,awake:0,purple:0,sincePlay:30,over:0,busy:null};}
-function fresh(){return {v:1,week:1,min:0,speed:1,paused:false,meters:false,b:freshBaby(),p:{energy:85,resting:false,helpsToday:0},helper:0,ws:freshStats(),total:freshStats(),cards:[],flags:{},started:false,dayOver:false,inSummary:false,finished:false};}
+function fresh(){return {v:2,g:G.newBaby(),week:1,min:0,speed:1,paused:false,meters:false,b:freshBaby(),p:{energy:85,resting:false,helpsToday:0},helper:0,ws:freshStats(),total:freshStats(),cards:[],flags:{},started:false,dayOver:false,inSummary:false,finished:false};}
 let S = fresh();
 function save(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(S));}catch(e){}}
-function load(){try{const r=localStorage.getItem(SAVE_KEY); if(!r) return null; const o=JSON.parse(r); return o&&o.v===1?o:null;}catch(e){return null;}}
+function load(){try{const r=localStorage.getItem(SAVE_KEY); if(!r) return null; const o=JSON.parse(r); return o&&o.v===2&&o.g?o:null;}catch(e){return null;}}
 
 /* ============ Clock ============ */
 const clockMin=()=>(START_HOUR*60+S.min)%1440;
@@ -226,6 +227,54 @@ function learn(id){
  toast('📖 New learning card: <b>'+CARD[id].t+'</b>','card');
 }
 
+/* ============ Health panel (growth from src/growth.js + today's tallies) ============ */
+const wide=window.matchMedia('(min-width:900px)');
+const barPos=z=>Math.max(2,Math.min(98,(z+2.4)/4.8*100));
+function growthRow(label,o,text,alt,extra,range,showPct){
+ const pct=showPct?'around the '+G.ordinal(o.pct)+' percentile':'';
+ const lo=barPos(G.Z[0]), hi=barPos(G.Z[4]);
+ const bar=showPct?'<div class="gbar" role="img" aria-label="'+label+': '+pct+'. Typical range '+range+'"><i class="band" style="left:'+lo.toFixed(1)+'%;width:'+(hi-lo).toFixed(1)+'%"></i><i class="tick"></i><i class="dot" style="left:'+barPos(o.z).toFixed(1)+'%"></i></div>':'';
+ const note=showPct?'Typical range at this age: '+range+' · '+pct:range;
+ return '<div class="gr"><div class="gr-top"><span>'+label+'</span><b>'+text+'</b></div>'+
+  '<div class="gr-sub">'+alt+(extra?' · '+extra:'')+'</div>'+bar+'<div class="gr-note">'+note+'</div></div>';
+}
+function healthHTML(){
+ const m=G.measure(S.g,S.week), birth=G.measure(S.g,0), prev=G.measure(S.g,S.week-1), ws=S.ws;
+ const w=m.weight, l=m.length, h=m.head;
+ const lo=Math.round(w.lo*100)/100, hi=Math.round(w.hi*100)/100;
+ const lb=G.lbOz(w.v);
+ let wExtra;
+ if(w.dip) wExtra='down '+Math.round((1-w.v/birth.weight.v)*100)+'% from birth';
+ else wExtra='up '+(Math.round((w.v-prev.weight.v)*100)*10)+' g since last week';
+ const wRange=w.dip?'Most babies lose a little weight in the first days and are back to birth weight by about 2–3 weeks. Percentiles start from week 2.':lo.toFixed(1)+'–'+hi.toFixed(1)+' kg';
+ const cm=(o,v)=>o.lo.toFixed(1)+'–'+o.hi.toFixed(1)+' cm';
+ const stat=(k,v,n)=>'<div class="stat"><span>'+k+(n?'<small>'+n+'</small>':'')+'</span><span class="v">'+v+'</span></div>';
+ return '<h3>Growth <small>(WHO standards)</small></h3>'+
+  growthRow('Weight',w,w.v.toFixed(2)+' kg',lb.lb+' lb '+lb.oz+' oz',wExtra,wRange,!w.dip)+
+  growthRow('Length',l,l.v.toFixed(1)+' cm',G.inches(l.v)+' in','+'+(l.v-birth.length.v).toFixed(1)+' cm since birth',cm(l),true)+
+  growthRow('Head',h,h.v.toFixed(1)+' cm',G.inches(h.v)+' in','+'+(h.v-birth.head.v).toFixed(1)+' cm since birth',cm(h),true)+
+  '<p class="muted hp-note">Healthy babies follow their own curve — there is no “best” number, and the trend matters more than one reading. Boys’ and girls’ WHO values are averaged here. For a real baby, ask your midwife, health visitor or doctor.</p>'+
+  '<h3>Today so far</h3>'+
+  stat('Feeds',ws.feeds,'Typical: 8–12 in 24 h')+
+  stat('Wet / dirty nappies',ws.wet+' / '+ws.dirty,'Expect 6+ wet a day after day 5')+
+  stat('Baby’s sleep',(ws.sleep/60).toFixed(1)+' h','Newborns: roughly 14–17 h a day')+
+  stat('Tummy time',ws.tummy+(ws.tummy===1?' session':' sessions'))+
+  stat('Baths',ws.baths);
+}
+let lastHealth='';
+function updateHealth(){
+ const m=G.measure(S.g,S.week);
+ $('hsText').textContent=m.weight.v.toFixed(2)+' kg · '+m.length.v.toFixed(1)+' cm';
+ if(!wide.matches) return;
+ const html='<div class="kicker">Week '+S.week+' of 12</div><h2>Baby’s health</h2>'+healthHTML();
+ if(html!==lastHealth){$('healthSide').innerHTML=html; lastHealth=html;}
+}
+function openHealth(){
+ learn('growth');
+ modal('<div class="kicker">Week '+S.week+' of 12</div><h2>Baby’s health</h2>'+healthHTML()+
+  '<p class="muted" style="font-size:12.5px">Source: WHO Child Growth Standards. A game simplification, educational only and not medical advice.</p>',[{label:'Close',primary:true}]);
+}
+
 /* ============ Toasts ============ */
 let tq=[],tShowing=null,tTimer=null;
 function toast(html,kind,front){
@@ -345,6 +394,7 @@ function render(){
   el.classList.toggle('soft',(b.asleep||S.helper>0)&&k!=='rest'&&k!=='help');
   if(k==='rest'){el.classList.toggle('on',p.resting); el.querySelector('.lb').textContent=p.resting?'Stop resting':'Rest';}
  });
+ updateHealth();
 }
 function popFx(emoji){
  if(!emoji) return;
@@ -471,6 +521,8 @@ $('bPause').onclick=()=>{S.paused=!S.paused; render(); save();};
 $('bSpeed').onclick=()=>{S.speed=S.speed===1?2:S.speed===2?4:1; render(); save();};
 $('bJournal').onclick=()=>{if(!modalOpen) openJournal();};
 $('bMenu').onclick=()=>{if(!modalOpen) openMenu();};
+$('bHealth').onclick=()=>{if(!modalOpen) openHealth();};
+wide.addEventListener&&wide.addEventListener('change',()=>{lastHealth=''; render();});
 $('aboutLink').onclick=e=>{e.preventDefault(); if(!modalOpen) openAbout();};
 
 let ticks=0;
