@@ -245,6 +245,8 @@ function healthHTML(){
   gmRow('Weight',w,w.v.toFixed(2)+' kg',!w.dip,w.dip?'−'+dipPct+'%':'')+
   gmRow('Length',l,l.v.toFixed(1)+' cm',true)+
   gmRow('Head',h,h.v.toFixed(1)+' cm',true)+
+  '<p class="gkey"><span><i class="kd"></i>your baby</span><span><i class="kb"></i>typical range</span><span><i class="kt"></i>middle</span></p>'+
+  '<p class="gnote">Size is just one measurement to compare. It isn’t a score of your baby’s health.</p>'+
   '<h3>Today</h3><div class="chips">'+chip('Feeds',ws.feeds)+chip('Nappies',ws.wet+' / '+ws.dirty)+chip('Sleep',(ws.sleep/60).toFixed(1)+' h')+'</div>'+
   '<button class="more-btn" data-more aria-expanded="'+healthMore+'">'+(healthMore?'Less info ▴':'More info ▾')+'</button>';
  if(healthMore){
@@ -253,6 +255,9 @@ function healthHTML(){
   const pc=o=>'around the '+G.ordinal(o.pct)+' percentile';
   const lb=G.lbOz(w.v);
   out+='<div class="more">'+
+   '<p><b>Reading the bars</b> The orange dot is your baby’s measurement. The green band is where about 94 in 100 babies of this age fall (3rd to 97th percentile). The green line is the middle: half are smaller, half larger.</p>'+
+   '<p>Anywhere in the band is typical. Near an edge is still common and often fine, and a dot outside it isn’t a diagnosis. Your doctor or nurse looks at the trend over time, plus feeding, nappies, alertness and how your baby seems to you.</p>'+
+   '<p>Weight, length and head size aren’t a measure of overall health. They’re numbers to compare against other babies of the same age.</p>'+
    line('Weight',[lb.lb+' lb '+lb.oz+' oz', w.dip?'down '+dipPct+'% from birth':rng(w,'kg',1), w.dip?'':pc(w), w.dip?'':'up '+(Math.round((w.v-prev.weight.v)*100)*10)+' g since last week'])+
    (w.dip?'<p>Most babies lose a little weight at first and regain it by about 2–3 weeks. Percentiles start at week 2.</p>':'')+
    line('Length',[G.inches(l.v)+' in', rng(l,'cm',1), pc(l), '+'+(l.v-birth.length.v).toFixed(1)+' cm since birth'])+

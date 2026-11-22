@@ -113,7 +113,12 @@ test('phone: health strip opens a sheet with growth and today so far', async ({ 
   // Compact by default: the detail only appears after "More info".
   await expect(sheet).not.toContainText('percentile');
   await expect(sheet).not.toContainText('Not medical advice');
+  // One-line key and caveat are always visible.
+  for (const t of ['your baby', 'typical range', 'middle', 'isn’t a score of your baby’s health']) await expect(sheet).toContainText(t);
+  await expect(sheet).not.toContainText('Reading the bars');
   await sheet.getByRole('button', { name: /More info/ }).click();
+  await expect(sheet).toContainText('Reading the bars');
+  await expect(sheet).toContainText('aren’t a measure of overall health');
   await expect(sheet).toContainText('Percentiles start at week 2'); // week 1: weight dips, no percentile yet
   await expect(sheet).toContainText('WHO Child Growth Standards');
   await expect(sheet).toContainText('Not medical advice');

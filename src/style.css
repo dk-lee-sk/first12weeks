@@ -84,6 +84,13 @@ footer a{color:var(--muted)}
 .gm-k{color:var(--muted);font-weight:700}
 .gm-v{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 .gm-v small{color:var(--muted);font-weight:700;font-size:11.5px}
+.gkey{display:flex;flex-wrap:wrap;gap:4px 14px;margin:2px 0 0;font-size:11.5px;color:var(--muted);font-weight:700}
+.gkey span{display:inline-flex;align-items:center;gap:5px}
+.gkey i{display:inline-block}
+.gkey .kd{width:10px;height:10px;border-radius:50%;background:var(--accent)}
+.gkey .kb{width:16px;height:8px;border-radius:5px;background:var(--sage-soft)}
+.gkey .kt{width:2px;height:12px;background:var(--sage)}
+.gnote{margin:6px 0 0;font-size:12.5px;line-height:1.35;color:var(--muted)}
 .chips{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .chip{background:#fff;border:1px solid var(--line);border-radius:12px;padding:7px 4px;text-align:center}
 .chip small{display:block;font-size:11.5px;color:var(--muted);font-weight:700}
