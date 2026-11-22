@@ -109,8 +109,16 @@ test('phone: health strip opens a sheet with growth and today so far', async ({ 
   await page.locator('#bHealth').click();
   const sheet = page.locator('#sheet');
   await expect(sheet).toContainText('Baby’s health');
-  for (const t of ['Weight', 'Length', 'Head', 'Today so far', 'Feeds', 'WHO']) await expect(sheet).toContainText(t);
+  for (const t of ['Weight', 'Length', 'Head', 'Feeds', 'Nappies', 'Sleep']) await expect(sheet).toContainText(t);
+  // Compact by default: the detail only appears after "More info".
+  await expect(sheet).not.toContainText('percentile');
+  await expect(sheet).not.toContainText('Not medical advice');
+  await sheet.getByRole('button', { name: /More info/ }).click();
   await expect(sheet).toContainText('Percentiles start at week 2'); // week 1: weight dips, no percentile yet
+  await expect(sheet).toContainText('WHO Child Growth Standards');
+  await expect(sheet).toContainText('Not medical advice');
+  await sheet.getByRole('button', { name: /Less info/ }).click();
+  await expect(sheet).not.toContainText('percentile');
   expect(await page.evaluate(() => window.__F12.S.cards.includes('growth'))).toBe(true);
   await page.locator('#sheet .btn.primary').click();
   await expect(page.locator('#overlay')).toBeHidden();
@@ -125,7 +133,7 @@ test('wide screen: side panel shows live health; save format is v2', async ({ pa
   await expect(side).toBeVisible();
   await expect(page.locator('#bHealth')).toBeHidden();
   await expect(side).toContainText('Weight');
-  await expect(side).toContainText('Today so far');
+  await expect(side).toContainText('Today');
   expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false);
 
   // Go to week 2: percentiles appear and the weight is a gain on last week.
@@ -134,9 +142,11 @@ test('wide screen: side panel shows live health; save format is v2', async ({ pa
   await page.getByRole('button', { name: /On to week 2/ }).click();
   await page.getByRole('button', { name: /Start the day/ }).click();
   await expect(side).toContainText('Week 2 of 12');
+  await expect(page.locator('#healthSide .gbar:not(.off)')).toHaveCount(3);
+  await expect(side).not.toContainText('percentile');
+  await side.getByRole('button', { name: /More info/ }).click();
   await expect(side).toContainText(/percentile/);
   await expect(side).toContainText(/up \d+ g since last week/);
-  await expect(page.locator('#healthSide .gbar')).toHaveCount(3);
 
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('first12weeks.v2')));
   expect(saved.v).toBe(2);

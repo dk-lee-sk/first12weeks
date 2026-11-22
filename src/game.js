@@ -230,49 +230,52 @@ function learn(id){
 /* ============ Health panel (growth from src/growth.js + today's tallies) ============ */
 const wide=window.matchMedia('(min-width:900px)');
 const barPos=z=>Math.max(2,Math.min(98,(z+2.4)/4.8*100));
-function growthRow(label,o,text,alt,extra,range,showPct){
- const pct=showPct?'around the '+G.ordinal(o.pct)+' percentile':'';
+let healthMore=false; // "More info" open?
+function gmRow(label,o,text,showBar,tag){
  const lo=barPos(G.Z[0]), hi=barPos(G.Z[4]);
- const bar=showPct?'<div class="gbar" role="img" aria-label="'+label+': '+pct+'. Typical range '+range+'"><i class="band" style="left:'+lo.toFixed(1)+'%;width:'+(hi-lo).toFixed(1)+'%"></i><i class="tick"></i><i class="dot" style="left:'+barPos(o.z).toFixed(1)+'%"></i></div>':'';
- const note=showPct?'Typical range at this age: '+range+' · '+pct:range;
- return '<div class="gr"><div class="gr-top"><span>'+label+'</span><b>'+text+'</b></div>'+
-  '<div class="gr-sub">'+alt+(extra?' · '+extra:'')+'</div>'+bar+'<div class="gr-note">'+note+'</div></div>';
+ const bar=showBar?'<div class="gbar" role="img" aria-label="'+label+', around the '+G.ordinal(o.pct)+' percentile"><i class="band" style="left:'+lo.toFixed(1)+'%;width:'+(hi-lo).toFixed(1)+'%"></i><i class="tick"></i><i class="dot" style="left:'+barPos(o.z).toFixed(1)+'%"></i></div>':'<div class="gbar off"></div>';
+ return '<div class="gm"><span class="gm-k">'+label+'</span>'+bar+'<b class="gm-v">'+text+(tag?' <small>'+tag+'</small>':'')+'</b></div>';
 }
 function healthHTML(){
  const m=G.measure(S.g,S.week), birth=G.measure(S.g,0), prev=G.measure(S.g,S.week-1), ws=S.ws;
  const w=m.weight, l=m.length, h=m.head;
- const lo=Math.round(w.lo*100)/100, hi=Math.round(w.hi*100)/100;
- const lb=G.lbOz(w.v);
- let wExtra;
- if(w.dip) wExtra='down '+Math.round((1-w.v/birth.weight.v)*100)+'% from birth';
- else wExtra='up '+(Math.round((w.v-prev.weight.v)*100)*10)+' g since last week';
- const wRange=w.dip?'Most babies lose a little weight at first and regain it by about 2–3 weeks. Percentiles start at week 2.':lo.toFixed(1)+'–'+hi.toFixed(1)+' kg';
- const cm=(o,v)=>o.lo.toFixed(1)+'–'+o.hi.toFixed(1)+' cm';
- const stat=(k,v,n)=>'<div class="stat"><span>'+k+(n?'<small>'+n+'</small>':'')+'</span><span class="v">'+v+'</span></div>';
- return '<h3>Growth <small>(WHO standards)</small></h3>'+
-  growthRow('Weight',w,w.v.toFixed(2)+' kg',lb.lb+' lb '+lb.oz+' oz',wExtra,wRange,!w.dip)+
-  growthRow('Length',l,l.v.toFixed(1)+' cm',G.inches(l.v)+' in','+'+(l.v-birth.length.v).toFixed(1)+' cm since birth',cm(l),true)+
-  growthRow('Head',h,h.v.toFixed(1)+' cm',G.inches(h.v)+' in','+'+(h.v-birth.head.v).toFixed(1)+' cm since birth',cm(h),true)+
-  '<p class="muted hp-note">Healthy babies follow their own curve; the trend matters more than one reading. WHO boys’ and girls’ values are averaged. For a real baby, ask your midwife or doctor.</p>'+
-  '<h3>Today so far</h3>'+
-  stat('Feeds',ws.feeds,'Typical: 8–12 in 24 h')+
-  stat('Wet / dirty nappies',ws.wet+' / '+ws.dirty,'Expect 6+ wet a day after day 5')+
-  stat('Baby’s sleep',(ws.sleep/60).toFixed(1)+' h','Newborns: roughly 14–17 h a day')+
-  stat('Tummy time',ws.tummy+(ws.tummy===1?' session':' sessions'))+
-  stat('Baths',ws.baths);
+ const chip=(k,v)=>'<div class="chip"><small>'+k+'</small><b>'+v+'</b></div>';
+ const dipPct=w.dip?Math.round((1-w.v/birth.weight.v)*100):0;
+ let out='<h3>Growth <small>WHO</small></h3>'+
+  gmRow('Weight',w,w.v.toFixed(2)+' kg',!w.dip,w.dip?'−'+dipPct+'%':'')+
+  gmRow('Length',l,l.v.toFixed(1)+' cm',true)+
+  gmRow('Head',h,h.v.toFixed(1)+' cm',true)+
+  '<h3>Today</h3><div class="chips">'+chip('Feeds',ws.feeds)+chip('Nappies',ws.wet+' / '+ws.dirty)+chip('Sleep',(ws.sleep/60).toFixed(1)+' h')+'</div>'+
+  '<button class="more-btn" data-more aria-expanded="'+healthMore+'">'+(healthMore?'Less info ▴':'More info ▾')+'</button>';
+ if(healthMore){
+  const line=(k,parts)=>'<p><b>'+k+'</b> '+parts.filter(Boolean).join(' · ')+'</p>';
+  const rng=(o,u,d)=>'typical '+o.lo.toFixed(d)+'–'+o.hi.toFixed(d)+' '+u;
+  const pc=o=>'around the '+G.ordinal(o.pct)+' percentile';
+  const lb=G.lbOz(w.v);
+  out+='<div class="more">'+
+   line('Weight',[lb.lb+' lb '+lb.oz+' oz', w.dip?'down '+dipPct+'% from birth':rng(w,'kg',1), w.dip?'':pc(w), w.dip?'':'up '+(Math.round((w.v-prev.weight.v)*100)*10)+' g since last week'])+
+   (w.dip?'<p>Most babies lose a little weight at first and regain it by about 2–3 weeks. Percentiles start at week 2.</p>':'')+
+   line('Length',[G.inches(l.v)+' in', rng(l,'cm',1), pc(l), '+'+(l.v-birth.length.v).toFixed(1)+' cm since birth'])+
+   line('Head',[G.inches(h.v)+' in', rng(h,'cm',1), pc(h), '+'+(h.v-birth.head.v).toFixed(1)+' cm since birth'])+
+   '<p>Healthy babies follow their own curve. The trend matters more than one reading.</p>'+
+   '<p>A typical day: 8–12 feeds, 6+ wet nappies (after day 5), 14–17 h sleep.</p>'+
+   '<p>So far today: tummy time '+ws.tummy+', baths '+ws.baths+'.</p>'+
+   '<p class="muted">WHO Child Growth Standards, boys’ and girls’ averaged. Not medical advice.</p></div>';
+ }
+ return out;
 }
+const hpWrap=()=>'<div class="hp">'+healthHTML()+'</div>';
 let lastHealth='';
 function updateHealth(){
  const m=G.measure(S.g,S.week);
  $('hsText').textContent=m.weight.v.toFixed(2)+' kg · '+m.length.v.toFixed(1)+' cm';
  if(!wide.matches) return;
- const html='<div class="kicker">Week '+S.week+' of 12</div><h2>Baby’s health</h2>'+healthHTML();
+ const html='<div class="kicker">Week '+S.week+' of 12</div><h2>Baby’s health</h2>'+hpWrap();
  if(html!==lastHealth){$('healthSide').innerHTML=html; lastHealth=html;}
 }
 function openHealth(){
  learn('growth');
- modal('<div class="kicker">Week '+S.week+' of 12</div><h2>Baby’s health</h2>'+healthHTML()+
-  '<p class="muted" style="font-size:12.5px">Source: WHO Child Growth Standards, simplified for the game. Not medical advice.</p>',[{label:'Close',primary:true}]);
+ modal('<div class="kicker">Week '+S.week+' of 12</div><h2>Baby’s health</h2>'+hpWrap(),[{label:'Close',primary:true}]);
 }
 
 /* ============ Toasts ============ */
@@ -418,13 +421,12 @@ function startScreen(){
  const saved=load();
  const html='<div class="kicker">A gentle newborn care sim</div><h2>First 12 Weeks</h2>'+
   '<p>One nursery. One newborn. Twelve weeks, one day per week.</p>'+
-  '<h3>How it works</h3><ul>'+
-  '<li><b>Read the cue.</b> Babies show what they need long before they cry.</li>'+
-  '<li><b>No losing.</b> A wrong guess just teaches the cue you missed.</li>'+
-  '<li><b>Look after yourself too.</b> Rest and accept help.</li>'+
-  '<li>Actions unlock <b>learning cards</b> from public health guidance.</li></ul>'+
-  '<label class="toggle"><span>Easy mode: show need meters & hints</span><input type="checkbox" id="optMeters"'+(S.meters?' checked':'')+'></label>'+
-  '<p class="muted" style="font-size:12.5px">A day lasts about 5 minutes at 1×. Educational only, not medical advice.</p>';
+  '<ul>'+
+  '<li><b>Read the cue.</b> Babies show needs before they cry.</li>'+
+  '<li><b>No losing.</b> A wrong guess teaches the cue.</li>'+
+  '<li><b>Look after yourself too.</b></li></ul>'+
+  '<label class="toggle"><span>Easy mode: meters & hints</span><input type="checkbox" id="optMeters"'+(S.meters?' checked':'')+'></label>'+
+  '<p class="muted" style="font-size:12.5px">A day takes about 5 minutes. Educational only, not medical advice.</p>';
  const btns=[];
  if(saved&&saved.started&&!saved.finished) btns.push({label:'Continue — Week '+saved.week,primary:true,fn:()=>{const mm=readMeters(); S=saved; S.meters=mm; S.paused=false; S.dayOver=false; S.inSummary=false; if(S.min>=1440){S.dayOver=true; endDay();} render();}});
  btns.push({label:saved&&saved.started&&!saved.finished?'Start over':'Start week 1',primary:!(saved&&saved.started&&!saved.finished),fn:()=>{const mm=readMeters(); S=fresh(); S.meters=mm; S.started=true; weekIntro();}});
@@ -445,14 +447,13 @@ function endDay(){
  save();
  const row=(l,v,n)=>'<div class="stat"><span>'+l+(n?'<small>'+n+'</small>':'')+'</span><span class="v">'+v+'</span></div>';
  const html='<div class="kicker">Week '+S.week+' complete</div><h2>'+(S.week===12?'You made it.':'Day done.')+'</h2>'+
-  row('Feeds',ws.feeds,'Typical newborn: 8–12 in 24 h')+
-  row('Wet / dirty nappies',ws.wet+' / '+ws.dirty,'Expect 6+ wet a day after day 5')+
-  row('Baby’s sleep',(ws.sleep/60).toFixed(1)+' h','Newborns: roughly 14–17 h')+
-  row('Cue reading',pct(ws.right,ws.cues)+' <small>'+ws.right+' of '+ws.cues+'</small>','Care matched to the strongest cue')+
-  row('Tummy time',ws.tummy+' sessions')+
+  row('Feeds',ws.feeds)+
+  row('Wet / dirty nappies',ws.wet+' / '+ws.dirty)+
+  row('Baby’s sleep',(ws.sleep/60).toFixed(1)+' h')+
+  row('Cue reading',pct(ws.right,ws.cues)+' <small>'+ws.right+' of '+ws.cues+'</small>')+
   row('Help accepted',ws.helps+(ws.helps?' 💛':''))+
   row('Learning cards',S.cards.length+' / '+CARDS.length)+
-  '<p class="muted" style="font-size:12.5px">A learning mirror, not a score. Real babies vary.</p>';
+  '<p class="muted" style="font-size:12.5px">Typical: 8–12 feeds, 6+ wet nappies, 14–17 h sleep. Not a score; real babies vary.</p>';
  if(S.week===12){
   modal(html,[{label:'See your 12 weeks',primary:true,fn:finale}]);
  }else{
@@ -480,8 +481,8 @@ function openJournal(){
  const wasOpen=modalOpen, prev=wasOpen?$('sheet').innerHTML:null;
  const got=CARDS.filter(c=>S.cards.includes(c.id));
  const html='<div class="kicker">Learning journal</div><h2>'+got.length+' of '+CARDS.length+' cards</h2>'+
-  CARDS.map(c=>S.cards.includes(c.id)?'<div class="cardx"><b>'+c.t+'</b>'+c.b+'<div class="src">Source: '+c.s+'</div></div>':'<div class="cardx locked">🔒 Keep caring to unlock</div>').join('')+
-  '<p class="muted" style="font-size:12.5px">Summaries of public guidance. Not medical advice. Follow your own healthcare team.</p>';
+  CARDS.map(c=>S.cards.includes(c.id)?'<details class="cardx"><summary>'+c.t+'</summary>'+c.b+'<div class="src">Source: '+c.s+'</div></details>':'<div class="cardx locked">🔒 Keep caring to unlock</div>').join('')+
+  '<p class="muted" style="font-size:12.5px">Public guidance, summarised. Not medical advice.</p>';
  if(wasOpen&&S.inSummary){
   modal(html,[{label:'Back',primary:true,fn:()=>{S.inSummary=false; endDayReshow();}}]);
  }else modal(html,[{label:'Close',primary:true}]);
@@ -522,6 +523,12 @@ $('bSpeed').onclick=()=>{S.speed=S.speed===1?2:S.speed===2?4:1; render(); save()
 $('bJournal').onclick=()=>{if(!modalOpen) openJournal();};
 $('bMenu').onclick=()=>{if(!modalOpen) openMenu();};
 $('bHealth').onclick=()=>{if(!modalOpen) openHealth();};
+document.addEventListener('click',e=>{
+ if(!e.target.closest('[data-more]')) return;
+ healthMore=!healthMore; lastHealth='';
+ const hp=document.querySelector('#sheet .hp'); if(modalOpen&&hp) hp.innerHTML=healthHTML();
+ updateHealth();
+});
 wide.addEventListener&&wide.addEventListener('change',()=>{lastHealth=''; render();});
 $('aboutLink').onclick=e=>{e.preventDefault(); if(!modalOpen) openAbout();};
 
