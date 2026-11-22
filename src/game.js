@@ -88,7 +88,7 @@ function stepMinute(){
   b.awake++;
   if(b.sleepy>=100){
    b.over++;
-   if(b.over>=35&&!b.busy){putToSleep(); toast('Exhausted, baby finally dozed off in your arms. You laid them in the crib, on their back.','info'); learn('overtired');}
+   if(b.over>=35&&!b.busy){putToSleep(); toast('Exhausted, baby dozed off in your arms. You laid them in the crib, on their back.','info'); learn('overtired');}
   }else b.over=0;
  }
  if(b.gas>0&&b.sinceFeed>60) b.gas=0;
@@ -115,12 +115,12 @@ function stepMinute(){
    if(b.purple>0) b.purple=Math.max(0,b.purple-1);
    if(b.sleepy>=45&&b.hunger<60) putToSleep();
   }
-  if(S.helper===0) toast('Your helper hands baby back. You got some real rest.','ok');
+  if(S.helper===0) toast('Your helper hands baby back. You got real rest.','ok');
  }
  if(S.helper>0) p.energy=clamp(p.energy+0.3);
  else if(p.resting&&b.asleep) p.energy=clamp(p.energy+c.restRate);
  else p.energy=clamp(p.energy-(night?0.12:0.05)*c.strain);
- if(p.energy<20&&!S.flags.lowE){S.flags.lowE=true; toast('You’re running on empty. Rest when baby sleeps, or ask for help — that’s part of the job, not a failure.','learn'); learn('help');}
+ if(p.energy<20&&!S.flags.lowE){S.flags.lowE=true; toast('Running on empty. Rest when baby sleeps, or ask for help. That’s part of the job.','learn'); learn('help');}
  if(S.min>=1440) S.dayOver=true;
 }
 function advance(n,k){S.b.busy=k; for(let i=0;i<n&&!S.dayOver;i++) stepMinute(); S.b.busy=null; if(S.dayOver) endDay();}
@@ -128,70 +128,70 @@ function advance(n,k){S.b.busy=k; for(let i=0;i<n&&!S.dayOver;i++) stepMinute();
 /* ============ Actions ============ */
 const EFF={
  feed(t){const b=S.b;
-  if(b.hunger<30) return {msg:'Turns away from the feed — not hungry yet.',dur:3};
+  if(b.hunger<30) return {msg:'Not hungry yet. Turns away.',dur:3};
   const late=b.hunger>=85; let msg;
-  if(late){msg='Fed — but it took a while to calm down enough to latch on. Feeding on early cues is easier for both of you.'; learn('cues');}
-  else if(t&&t.k==='hunger'&&level(t.v)==='early'){msg='Fed on an early cue — calm and easy.'; learn('cues');}
-  else msg=isNight()?'A quiet night feed. Night feeds are normal and important.':'A good feed. Content and milk-drunk.';
-  if(b.sinceFeed<80){msg+=' Feeds this close together? That’s cluster feeding — normal, especially in the evening.'; learn('cluster');}
+  if(late){msg='Fed, but it took a while to calm down. Early cues make feeding easier.'; learn('cues');}
+  else if(t&&t.k==='hunger'&&level(t.v)==='early'){msg='Fed on an early cue. Calm and easy.'; learn('cues');}
+  else msg=isNight()?'A quiet night feed. Night feeds are normal.':'A good feed. Content and milk-drunk.';
+  if(b.sinceFeed<80){msg+=' Close together? That’s cluster feeding, and it’s normal.'; learn('cluster');}
   S.ws.feeds++; b.gas=rand(45,80);
   return {msg,dur:cfg(S.week).feedDur};
  },
  burp(){const b=S.b;
   if(b.gas<=0) return {msg:'No burp needed right now.',dur:2};
   b.gas=0; learn('burp');
-  return {msg:'Upright on your shoulder, gentle pats… a very satisfying burp.',dur:5};
+  return {msg:'Upright on your shoulder, gentle pats… a satisfying burp.',dur:5};
  },
  change(){const b=S.b;
   if(!b.diaper) return {msg:'Still clean and dry. Checking is never wrong.',dur:2};
   let msg;
-  if(b.diaper==='wet'){S.ws.wet++; msg='Wet nappy changed. Counting wet nappies tells you feeding is going well.'; learn('nappies');}
-  else{S.ws.dirty++; msg=S.week===1?'Poo is shifting from dark and sticky toward mustard yellow — right on track.':'Yellow, seedy poo — perfectly normal.'; learn('poo');}
+  if(b.diaper==='wet'){S.ws.wet++; msg='Wet nappy changed. Wet nappies show feeding is going well.'; learn('nappies');}
+  else{S.ws.dirty++; msg=S.week===1?'Poo is turning from dark and sticky to mustard yellow. On track.':'Yellow, seedy poo. Normal.'; learn('poo');}
   b.diaper=null; b.dAge=0;
   return {msg,dur:5};
  },
  sleep(){const b=S.b,L=needs();
-  if(b.hunger>=60) return {msg:'Fusses as soon as you lay them down — too hungry to settle.',dur:5};
-  if(b.diaper==='dirty'&&b.dAge>=5) return {msg:'Squirms and protests in the crib — a dirty nappy needs changing first.',dur:5};
-  if(b.sleepy<40) return {msg:'Wide awake and protesting. Not tired yet.',dur:4};
+  if(b.hunger>=60) return {msg:'Fusses when laid down. Too hungry to settle.',dur:5};
+  if(b.diaper==='dirty'&&b.dAge>=5) return {msg:'Protests in the crib. A dirty nappy needs changing first.',dur:5};
+  if(b.sleepy<40) return {msg:'Wide awake. Not tired yet.',dur:4};
   const windy=b.gas>0&&b.sinceFeed>=2;
   const over=b.sleepy>=85; putToSleep(); learn('safesleep'); if(over) learn('overtired');
   if(windy){b.sleepLeft=Math.round(b.sleepLeft*0.4); learn('burp');}
   const wrap=S.week<8?'Swaddled (loose at the hips), on their back, in an empty crib.':'In a sleep sack, on their back, in an empty crib.';
-  return {msg:(over?'Overtired — it took a while to settle. ':'Drifting off. ')+wrap+(windy?' Trapped wind may wake them early — burping after feeds helps.':''),dur:over?20:8};
+  return {msg:(over?'Overtired, so it took a while. ':'Drifting off. ')+wrap+(windy?' Trapped wind may wake them early. Burp after feeds.':''),dur:over?20:8};
  },
  soothe(t){const b=S.b;
   if(b.purple>0){b.purple=Math.max(0,b.purple-15); learn('purple'); if(S.p.energy<40) learn('nevershake');
-   return {msg:b.purple?'Rocking, shushing, walking… a little calmer. Some crying has no fix — staying calm with them is the job.':'The storm passes. You stayed with them through it.',dur:10};}
+   return {msg:b.purple?'A little calmer. Some crying has no fix. Staying calm with them is the job.':'The storm passes. You stayed with them through it.',dur:10};}
   if(b.gas>0) b.gas=Math.max(1,b.gas-20);
   learn('soothe');
   if(!t) return {msg:'A lovely cuddle. You can’t spoil a newborn with holding.',dur:10,counts:false};
-  return {msg:'Holding calms them for a moment, but the need is still there.',dur:10};
+  return {msg:'Calmer for a moment, but the need is still there.',dur:10};
  },
  play(t){const b=S.b;
-  if(t&&t.k!=='bored'&&t.v>=50) return {msg:'Not now — too unsettled for tummy time.',dur:2};
-  if(b.sleepy>=55) return {msg:'Turns away and starts to fuss — getting tired. Looking away is a “break please” cue.',dur:3};
+  if(t&&t.k!=='bored'&&t.v>=50) return {msg:'Too unsettled for tummy time.',dur:2};
+  if(b.sleepy>=55) return {msg:'Turns away, getting tired. Looking away means “break, please.”',dur:3};
   b.sincePlay=0; b.sleepy=clamp(b.sleepy+8); S.ws.tummy++; learn('tummy');
-  let msg='Tummy time on the mat, then faces and chat. Short sessions add up.';
+  let msg='Tummy time, then faces and chat. Short sessions add up.';
   if(S.week>=6&&!S.flags.smile){S.flags.smile=true; learn('smile'); msg='Tummy time, then face to face… and a real social smile! 💛';}
-  else if(S.week>=10){learn('talk'); msg='Tummy time, then cooing back and forth. Your voice is their favourite sound.';}
+  else if(S.week>=10){learn('talk'); msg='Tummy time, then cooing back and forth. Yours is their favourite voice.';}
   return {msg,dur:10,counts:!!t};
  },
  bath(){const b=S.b;
-  if(b.hyg<35) return {msg:'Pretty clean already — 2–3 baths a week is plenty.',dur:2,counts:false};
+  if(b.hyg<35) return {msg:'Already clean. 2–3 baths a week is plenty.',dur:2,counts:false};
   b.hyg=0; S.ws.baths++; b.sleepy=clamp(b.sleepy+6);
-  if(S.week<=2){learn('stump'); return {msg:'A gentle sponge bath, keeping the cord stump clean and dry.',dur:15};}
-  learn('bath'); return {msg:'Warm bath (about 37°C), one hand on baby the whole time.',dur:15};
+  if(S.week<=2){learn('stump'); return {msg:'A gentle sponge bath. Keep the stump dry.',dur:15};}
+  learn('bath'); return {msg:'Warm bath (about 37°C). One hand on baby the whole time.',dur:15};
  },
 };
 
 function act(k){
  if(!S.started||S.paused||modalOpen||S.dayOver) return;
- if(S.helper>0){toast('Your helper is on shift — enjoy the break.','info'); return;}
+ if(S.helper>0){toast('Your helper is on shift. Enjoy the break.','info'); return;}
  if(k==='rest') return doRest();
  if(k==='help') return doHelp();
  const b=S.b;
- if(b.asleep){toast('Baby is asleep. Let them sleep — and rest if you can.','info'); return;}
+ if(b.asleep){toast('Baby is asleep. Let them sleep, and rest if you can.','info'); return;}
  const t=top(), L=needs();
  const r=EFF[k](t);
  let judge='';
@@ -208,15 +208,15 @@ function act(k){
  render(); save();
 }
 function doRest(){
- if(!S.b.asleep){toast('Resting needs someone else on baby duty. Baby’s awake — try “Ask for help”.','info',true); return;}
+ if(!S.b.asleep){toast('Baby’s awake. To rest, try “Ask for help”.','info',true); return;}
  S.p.resting=!S.p.resting;
- toast(S.p.resting?'Resting while baby sleeps. Time passes faster.':'Back up and about.','info',true);
+ toast(S.p.resting?'Resting. Time passes faster.':'Back up and about.','info',true);
  render(); save();
 }
 function doHelp(){
- if(S.p.helpsToday>=2){toast('Your helper has gone home for today. Tomorrow’s another day.','info',true); return;}
+ if(S.p.helpsToday>=2){toast('Your helper has gone home. Tomorrow’s another day.','info',true); return;}
  S.p.helpsToday++; S.ws.helps++; S.helper=120; S.p.resting=false; learn('help');
- toast('Your partner takes a 2-hour shift. You get some real rest.','ok',true);
+ toast('A helper takes a 2-hour shift. Rest up.','ok',true);
  render(); save();
 }
 
@@ -246,14 +246,14 @@ function healthHTML(){
  let wExtra;
  if(w.dip) wExtra='down '+Math.round((1-w.v/birth.weight.v)*100)+'% from birth';
  else wExtra='up '+(Math.round((w.v-prev.weight.v)*100)*10)+' g since last week';
- const wRange=w.dip?'Most babies lose a little weight in the first days and are back to birth weight by about 2–3 weeks. Percentiles start from week 2.':lo.toFixed(1)+'–'+hi.toFixed(1)+' kg';
+ const wRange=w.dip?'Most babies lose a little weight at first and regain it by about 2–3 weeks. Percentiles start at week 2.':lo.toFixed(1)+'–'+hi.toFixed(1)+' kg';
  const cm=(o,v)=>o.lo.toFixed(1)+'–'+o.hi.toFixed(1)+' cm';
  const stat=(k,v,n)=>'<div class="stat"><span>'+k+(n?'<small>'+n+'</small>':'')+'</span><span class="v">'+v+'</span></div>';
  return '<h3>Growth <small>(WHO standards)</small></h3>'+
   growthRow('Weight',w,w.v.toFixed(2)+' kg',lb.lb+' lb '+lb.oz+' oz',wExtra,wRange,!w.dip)+
   growthRow('Length',l,l.v.toFixed(1)+' cm',G.inches(l.v)+' in','+'+(l.v-birth.length.v).toFixed(1)+' cm since birth',cm(l),true)+
   growthRow('Head',h,h.v.toFixed(1)+' cm',G.inches(h.v)+' in','+'+(h.v-birth.head.v).toFixed(1)+' cm since birth',cm(h),true)+
-  '<p class="muted hp-note">Healthy babies follow their own curve — there is no “best” number, and the trend matters more than one reading. Boys’ and girls’ WHO values are averaged here. For a real baby, ask your midwife, health visitor or doctor.</p>'+
+  '<p class="muted hp-note">Healthy babies follow their own curve; the trend matters more than one reading. WHO boys’ and girls’ values are averaged. For a real baby, ask your midwife or doctor.</p>'+
   '<h3>Today so far</h3>'+
   stat('Feeds',ws.feeds,'Typical: 8–12 in 24 h')+
   stat('Wet / dirty nappies',ws.wet+' / '+ws.dirty,'Expect 6+ wet a day after day 5')+
@@ -272,7 +272,7 @@ function updateHealth(){
 function openHealth(){
  learn('growth');
  modal('<div class="kicker">Week '+S.week+' of 12</div><h2>Baby’s health</h2>'+healthHTML()+
-  '<p class="muted" style="font-size:12.5px">Source: WHO Child Growth Standards. A game simplification, educational only and not medical advice.</p>',[{label:'Close',primary:true}]);
+  '<p class="muted" style="font-size:12.5px">Source: WHO Child Growth Standards, simplified for the game. Not medical advice.</p>',[{label:'Close',primary:true}]);
 }
 
 /* ============ Toasts ============ */
@@ -358,9 +358,9 @@ function render(){
  $('baby').setAttribute('class',mood==='late'?'w3':mood==='mid'?'w2':mood==='early'?'w1':'breath');
  // cue panel
  const lvl=$('cueLvl');
- if(S.helper>0){$('cueText').textContent='Your helper has baby. Nothing to do but rest.'; lvl.className='lvl sleep'; lvl.textContent='Resting';}
+ if(S.helper>0){$('cueText').textContent='Your helper has baby. Just rest.'; lvl.className='lvl sleep'; lvl.textContent='Resting';}
  else if(b.asleep){
-  $('cueText').textContent=p.resting?'Asleep on their back. You’re resting too.':'Asleep on their back in an empty crib. A good moment to rest.';
+  $('cueText').textContent=p.resting?'Asleep on their back. You’re resting too.':'Asleep on their back in an empty crib. Time to rest.';
   lvl.className='lvl sleep'; lvl.textContent='Asleep';
  }else if(!t){
   $('cueText').textContent=S.week>=6?'Content and calm. Watching you, making little sounds.':'Content and calm, looking around.';
@@ -419,10 +419,10 @@ function startScreen(){
  const html='<div class="kicker">A gentle newborn care sim</div><h2>First 12 Weeks</h2>'+
   '<p>One nursery. One newborn. Twelve weeks, one day per week.</p>'+
   '<h3>How it works</h3><ul>'+
-  '<li><b>Read the cue.</b> Babies tell you what they need long before they cry. Watch, then choose the care that fits.</li>'+
-  '<li><b>There’s no losing.</b> A wrong guess just teaches you the cue you missed.</li>'+
-  '<li><b>Look after yourself too.</b> Rest when baby sleeps, and accept help.</li>'+
-  '<li>Every action unlocks <b>learning cards</b> based on public health guidance.</li></ul>'+
+  '<li><b>Read the cue.</b> Babies show what they need long before they cry.</li>'+
+  '<li><b>No losing.</b> A wrong guess just teaches the cue you missed.</li>'+
+  '<li><b>Look after yourself too.</b> Rest and accept help.</li>'+
+  '<li>Actions unlock <b>learning cards</b> from public health guidance.</li></ul>'+
   '<label class="toggle"><span>Easy mode: show need meters & hints</span><input type="checkbox" id="optMeters"'+(S.meters?' checked':'')+'></label>'+
   '<p class="muted" style="font-size:12.5px">A day lasts about 5 minutes at 1×. Educational only, not medical advice.</p>';
  const btns=[];
@@ -448,11 +448,11 @@ function endDay(){
   row('Feeds',ws.feeds,'Typical newborn: 8–12 in 24 h')+
   row('Wet / dirty nappies',ws.wet+' / '+ws.dirty,'Expect 6+ wet a day after day 5')+
   row('Baby’s sleep',(ws.sleep/60).toFixed(1)+' h','Newborns: roughly 14–17 h')+
-  row('Cue reading',pct(ws.right,ws.cues)+' <small>'+ws.right+' of '+ws.cues+'</small>','Picking the care that matched the strongest cue')+
+  row('Cue reading',pct(ws.right,ws.cues)+' <small>'+ws.right+' of '+ws.cues+'</small>','Care matched to the strongest cue')+
   row('Tummy time',ws.tummy+' sessions')+
   row('Help accepted',ws.helps+(ws.helps?' 💛':''))+
   row('Learning cards',S.cards.length+' / '+CARDS.length)+
-  '<p class="muted" style="font-size:12.5px">Numbers are a learning mirror, not a score. Real babies vary a lot.</p>';
+  '<p class="muted" style="font-size:12.5px">A learning mirror, not a score. Real babies vary.</p>';
  if(S.week===12){
   modal(html,[{label:'See your 12 weeks',primary:true,fn:finale}]);
  }else{
@@ -472,7 +472,7 @@ function finale(){
   '<div class="stat"><span>Nappies changed</span><span class="v">'+(T.wet+T.dirty)+'</span></div>'+
   '<div class="stat"><span>Cue reading overall</span><span class="v">'+pct(T.right,T.cues)+'</span></div>'+
   '<div class="stat"><span>Learning cards</span><span class="v">'+S.cards.length+' / '+CARDS.length+'</span></div>'+
-  '<h3>Before the real thing</h3><ul><li>Set up a safe sleep space: firm flat mattress, nothing else in the crib.</li><li>Agree how you’ll share nights and who your “help” people are.</li><li>Save your doctor’s and health visitor’s numbers, and know the fever rule.</li><li>Consider an antenatal or newborn-care class.</li></ul>';
+  '<h3>Before the real thing</h3><ul><li>Set up a safe sleep space: firm flat mattress, nothing else in the crib.</li><li>Agree how you’ll share nights, and who your “help” people are.</li><li>Save your doctor’s and health visitor’s numbers. Know the fever rule.</li><li>Consider an antenatal or newborn-care class.</li></ul>';
  modal(html,[{label:'Open learning journal',keep:true,fn:openJournal},{label:'Play again',primary:true,fn:()=>{const mm=S.meters; S=fresh(); S.meters=mm; S.started=true; weekIntro();}}]);
 }
 
@@ -481,7 +481,7 @@ function openJournal(){
  const got=CARDS.filter(c=>S.cards.includes(c.id));
  const html='<div class="kicker">Learning journal</div><h2>'+got.length+' of '+CARDS.length+' cards</h2>'+
   CARDS.map(c=>S.cards.includes(c.id)?'<div class="cardx"><b>'+c.t+'</b>'+c.b+'<div class="src">Source: '+c.s+'</div></div>':'<div class="cardx locked">🔒 Keep caring to unlock</div>').join('')+
-  '<p class="muted" style="font-size:12.5px">Summaries of public guidance for learning purposes. Not medical advice — always follow your own healthcare team.</p>';
+  '<p class="muted" style="font-size:12.5px">Summaries of public guidance. Not medical advice. Follow your own healthcare team.</p>';
  if(wasOpen&&S.inSummary){
   modal(html,[{label:'Back',primary:true,fn:()=>{S.inSummary=false; endDayReshow();}}]);
  }else modal(html,[{label:'Close',primary:true}]);
@@ -502,15 +502,15 @@ function openMenu(){
 }
 function openAbout(){
  const html='<div class="kicker">About</div><h2>First 12 Weeks</h2>'+
-  '<p>An open-source, no-fail learning game for expecting parents and anyone curious about what the newborn months involve. Prototype v0.1.</p>'+
-  '<h3>Design principles</h3><ul><li>Teach cue-reading, not button-mashing.</li><li>No failure state; wrong guesses explain the cue.</li><li>Honest about tiredness and crying, without punishing the player.</li><li>Parent wellbeing is part of the loop.</li></ul>'+
+  '<p>An open-source, no-fail learning game for expecting parents. Prototype v0.1.</p>'+
+  '<h3>Design principles</h3><ul><li>Teach cue-reading, not button-mashing.</li><li>No failure. Wrong guesses explain the cue.</li><li>Honest about tiredness and crying, never punishing.</li><li>Parent wellbeing is part of the loop.</li></ul>'+
   '<h3>Content sources</h3><ul>'+
   '<li><a href="https://www.healthychildren.org" target="_blank" rel="noopener">American Academy of Pediatrics — HealthyChildren.org</a></li>'+
   '<li><a href="https://www.nhs.uk/conditions/baby/" target="_blank" rel="noopener">NHS — Baby</a></li>'+
   '<li><a href="https://www.cdc.gov/ncbddd/actearly/milestones/" target="_blank" rel="noopener">CDC — Developmental milestones</a></li>'+
   '<li><a href="https://dontshake.org" target="_blank" rel="noopener">National Center on Shaken Baby Syndrome</a></li>'+
   '<li><a href="https://www.thensf.org" target="_blank" rel="noopener">National Sleep Foundation</a></li></ul>'+
-  '<p class="muted" style="font-size:12.5px">Educational only and not medical advice. Content pending clinical review. Always follow your midwife, doctor or health visitor.</p>';
+  '<p class="muted" style="font-size:12.5px">Educational only, not medical advice. Content pending clinical review. Follow your midwife, doctor or health visitor.</p>';
  modal(html,[{label:'Close',primary:true}]);
 }
 

@@ -110,7 +110,7 @@ test('phone: health strip opens a sheet with growth and today so far', async ({ 
   const sheet = page.locator('#sheet');
   await expect(sheet).toContainText('Baby’s health');
   for (const t of ['Weight', 'Length', 'Head', 'Today so far', 'Feeds', 'WHO']) await expect(sheet).toContainText(t);
-  await expect(sheet).toContainText('Percentiles start from week 2'); // week 1: weight dips, no percentile yet
+  await expect(sheet).toContainText('Percentiles start at week 2'); // week 1: weight dips, no percentile yet
   expect(await page.evaluate(() => window.__F12.S.cards.includes('growth'))).toBe(true);
   await page.locator('#sheet .btn.primary').click();
   await expect(page.locator('#overlay')).toBeHidden();
