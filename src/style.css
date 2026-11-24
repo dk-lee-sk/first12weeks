@@ -14,6 +14,13 @@ header{display:flex;align-items:center;gap:8px}
 .clock{font-weight:800;font-variant-numeric:tabular-nums;font-size:17px;display:flex;gap:4px;align-items:center}
 .hdr-btns{display:flex;gap:4px}
 .icon-btn{border:1px solid var(--line);background:var(--card);border-radius:10px;min-width:36px;height:34px;padding:0 8px;cursor:pointer;font-weight:700;font-size:14px}
+@media (max-width:420px){
+ header{gap:6px}
+ .hdr-btns{gap:3px}
+ .icon-btn{min-width:30px;padding:0 4px;font-size:13px}
+ .clock{font-size:16px;gap:3px}
+ #wkLabel{font-size:18px;white-space:nowrap}
+}
 .daybar{height:4px;background:var(--line);border-radius:4px;overflow:hidden}
 .daybar i{display:block;height:100%;width:0;background:var(--accent);transition:width .9s linear}
 .scene-wrap{position:relative;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:#f3e7da}
@@ -115,6 +122,16 @@ details.cardx[open] summary{margin-bottom:4px}
  .side{display:block;flex:0 0 340px;width:340px;position:sticky;top:10px;margin-top:10px;max-height:calc(100vh - 20px);overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px 16px 12px}
  .side h2{font-family:Fraunces,Georgia,serif;font-weight:600;font-size:22px;margin:0 0 2px}
  .side h3{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:14px 0 4px}
+}
+/* printing the cheat sheet: show only the open sheet */
+@media print{
+ .shell{display:none}
+ body{background:#fff}
+ #overlay{position:static;background:none;display:block}
+ #overlay[hidden]{display:none}
+ .sheet{max-height:none;max-width:none;overflow:visible;border-radius:0;padding:0;animation:none}
+ .sheet .btns{display:none}
+ .cardx{break-inside:avoid}
 }
 /* baby animation */
 #baby{transform-box:fill-box;transform-origin:center}

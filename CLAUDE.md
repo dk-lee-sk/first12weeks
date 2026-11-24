@@ -22,8 +22,9 @@ index.html        markup + SVG nursery scene
 src/style.css     all styles (CSS variables at :root)
 src/content.js    CARDS, WEEKS, CUES, LESSON  → window.F12_CONTENT
 src/growth.js     WHO growth tables (weight, length, head; weeks 0–13) and the baby's growth model → window.F12_GROWTH
-src/game.js       state, simulation (stepMinute), actions (EFF), rendering, modals, health panel
-tests/            Playwright: content integrity, growth data + health panel, full 12-week bot season
+src/audio.js      synthesised sound (Web Audio) → window.F12_AUDIO
+src/game.js       state, simulation (stepMinute), actions (EFF), rendering, modals, health panel, cheat sheet
+tests/            Playwright: content integrity, growth data + health panel, sound/cheat sheet/feedback, full 12-week bot season
 ```
 - Plain classic scripts so `index.html` opens straight from disk. Don't add a bundler or framework unless a roadmap item clearly needs one.
 - Time model: `S.min` counts game minutes from 07:00 (1440 per day). One real second is 5 game minutes × speed, ×4 while resting or while a helper is on shift.
@@ -32,6 +33,10 @@ tests/            Playwright: content integrity, growth data + health panel, ful
 - `window.__F12` exposes state and functions for tests. Keep it.
 - Save: `localStorage` key `first12weeks.v2`, always wrapped in try/catch. Bump the version key whenever you change the state shape. (v2 added `S.g`, the baby's growth profile; v1 saves are ignored.)
 - Health panel: weight, length and head from `src/growth.js` (WHO percentile tables copied exactly, boys and girls averaged so there is no sex assumption), plus today's feeds, nappies and sleep. It shows only numbers and bars by default; everything else (units, typical ranges, percentiles, tummy time, baths, source) sits behind a "More info" button. The journal collapses cards the same way. Keep new text behind such buttons. Phone: a strip under the energy bar opens a sheet. Wide screens (≥900px): a live side panel. Week 1 weight dips a little below birth weight (a game choice, noted in `growth.js`) and shows no percentile until week 2. `growth.js` must never call `Math.random` or the seeded balance test shifts; it uses `crypto` for the baby's profile.
+- Sound: `src/audio.js`, all synthesised, **off by default**, prefs in `localStorage` key `first12weeks.sound` (`{on, cry}`). Every sound needs an on-screen counterpart (the game must work muted). Cries stay soft (a cue, not an alarm) and have their own switch. `audio.js` must never call `Math.random` (it has its own tiny PRNG) or the seeded balance test shifts; a test enforces this. Game hooks: `AU.action(k)`, `AU.card()`, `AU.day()`, `AU.cry(soundInfo())` once per second, `AU.ambient(asleep)`.
+- Cheat sheet: `openCheat()` lists unlocked cards, prints through `@media print` (only the open sheet shows) and downloads as text. Opens from the journal and Settings.
+- Feedback: `FEEDBACK_URL` opens a prefilled new issue on the project's GitHub (public, so the copy tells people to leave out personal details). Never put user data in that URL.
+- Phone header must stay on one line at 390px (the `max-width:420px` rule shrinks the buttons); a test checks "Week 12 of 12" isn't wrapped.
 
 ## Balance targets (checked by `tests/season.spec.js`)
 Per in-game day, with the reference bot:

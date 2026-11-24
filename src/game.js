@@ -5,6 +5,10 @@ const START_HOUR = 7;
 const SAVE_KEY = 'first12weeks.v2'; // v2: added the baby's growth profile (S.g)
 const {CARDS, WEEKS, CUES, LESSON} = window.F12_CONTENT;
 const G = window.F12_GROWTH;
+const AU = window.F12_AUDIO;
+// Feedback goes to the project's GitHub issues (public; needs a free account). No personal details are sent.
+const FEEDBACK_URL = 'https://github.com/dk-lee-sk/first12weeks/issues/new?title='+encodeURIComponent('Feedback')+
+ '&body='+encodeURIComponent('What worked well?\n\nWhat was confusing?\n\nWhat is missing?\n\n(Please don’t include personal or medical details. This page is public.)');
 const CARD = Object.fromEntries(CARDS.map(c=>[c.id,c]));
 
 const MAP = {hunger:'feed', sleep:'sleep', diaper:'change', gas:'burp', purple:'soothe', bath:'bath', bored:'play'};
@@ -202,20 +206,20 @@ function act(k){
  }
  const msg=r.msg+(judge==='wrong'?'<br>'+LESSON[t.k]:'');
  toast(msg,judge==='right'?'ok':judge==='wrong'?'learn':'info',true);
- popFx(FX[k]);
+ popFx(FX[k]); AU.action(k);
  S.p.energy=clamp(S.p.energy-(isNight()?2:0.5)*cfg(S.week).strain);
  if(r.dur) advance(r.dur,k);
  render(); save();
 }
 function doRest(){
  if(!S.b.asleep){toast('Baby’s awake. To rest, try “Ask for help”.','info',true); return;}
- S.p.resting=!S.p.resting;
+ S.p.resting=!S.p.resting; if(S.p.resting) AU.action('rest');
  toast(S.p.resting?'Resting. Time passes faster.':'Back up and about.','info',true);
  render(); save();
 }
 function doHelp(){
  if(S.p.helpsToday>=2){toast('Your helper has gone home. Tomorrow’s another day.','info',true); return;}
- S.p.helpsToday++; S.ws.helps++; S.helper=120; S.p.resting=false; learn('help');
+ S.p.helpsToday++; S.ws.helps++; S.helper=120; S.p.resting=false; learn('help'); AU.action('help');
  toast('A helper takes a 2-hour shift. Rest up.','ok',true);
  render(); save();
 }
@@ -223,7 +227,7 @@ function doHelp(){
 /* ============ Learning cards ============ */
 function learn(id){
  if(!CARD[id]||S.cards.includes(id)) return;
- S.cards.push(id);
+ S.cards.push(id); AU.card();
  toast('📖 New learning card: <b>'+CARD[id].t+'</b>','card');
 }
 
@@ -346,6 +350,8 @@ function render(){
  $('dayFill').style.width=Math.min(100,S.min/1440*100)+'%';
  $('bPause').textContent=S.paused?'▶':'❚❚';
  $('bSpeed').textContent=S.speed+'×';
+ $('bSound').textContent=AU.on?'🔊':'🔇'; $('bSound').setAttribute('aria-pressed',AU.on?'true':'false');
+ AU.ambient(S.started&&!S.paused&&b.asleep);
  // scene
  const h=hour();
  const sky=night?'#2f3b63':(h>=18||h<7)?'#f0b99a':'#bfe0f2';
@@ -431,13 +437,39 @@ function startScreen(){
   '<li><b>No losing.</b> A wrong guess teaches the cue.</li>'+
   '<li><b>Look after yourself too.</b></li></ul>'+
   '<label class="toggle"><span>Easy mode: meters & hints</span><input type="checkbox" id="optMeters"'+(S.meters?' checked':'')+'></label>'+
+  '<label class="toggle"><span>Sound</span><input type="checkbox" id="optSound"'+(AU.on?' checked':'')+'></label>'+
   '<p class="muted" style="font-size:12.5px">A day takes about 5 minutes. Educational only, not medical advice.</p>';
  const btns=[];
- if(saved&&saved.started&&!saved.finished) btns.push({label:'Continue — Week '+saved.week,primary:true,fn:()=>{const mm=readMeters(); S=saved; S.meters=mm; S.paused=false; S.dayOver=false; S.inSummary=false; if(S.min>=1440){S.dayOver=true; endDay();} render();}});
- btns.push({label:saved&&saved.started&&!saved.finished?'Start over':'Start week 1',primary:!(saved&&saved.started&&!saved.finished),fn:()=>{const mm=readMeters(); S=fresh(); S.meters=mm; S.started=true; weekIntro();}});
+ if(saved&&saved.started&&!saved.finished) btns.push({label:'Continue — Week '+saved.week,primary:true,fn:()=>{const mm=readMeters(); readSound(); S=saved; S.meters=mm; S.paused=false; S.dayOver=false; S.inSummary=false; if(S.min>=1440){S.dayOver=true; endDay();} render();}});
+ btns.push({label:saved&&saved.started&&!saved.finished?'Start over':'Start week 1',primary:!(saved&&saved.started&&!saved.finished),fn:()=>{const mm=readMeters(); readSound(); S=fresh(); S.meters=mm; S.started=true; weekIntro();}});
  modal(html,btns);
 }
 function readMeters(){const el=document.getElementById('optMeters'); return el?el.checked:S.meters;}
+function readSound(){const el=document.getElementById('optSound'); if(el) AU.set({on:el.checked});}
+function openFeedback(){window.open(FEEDBACK_URL,'_blank','noopener');}
+
+/* ============ Cheat sheet: unlocked cards on one printable page ============ */
+const unlocked=()=>CARDS.filter(c=>S.cards.includes(c.id));
+function openCheat(){
+ const got=unlocked();
+ const html='<div class="kicker">Cheat sheet · '+got.length+' of '+CARDS.length+' cards</div><h2>First 12 Weeks: what you’ve learned</h2>'+
+  (got.length?got.map(c=>'<div class="cardx"><b>'+c.t+'</b>'+c.b+'<div class="src">Source: '+c.s+'</div></div>').join(''):'<p class="muted">Keep caring for baby to unlock cards.</p>')+
+  '<p class="muted" style="font-size:12.5px">Public guidance, summarised. Not medical advice. If you’re worried about your baby, contact your doctor or midwife.</p>';
+ modal(html,[
+  {label:'Print or save as PDF',primary:true,keep:true,fn:()=>window.print()},
+  {label:'Download as text',keep:true,fn:downloadCheat},
+  {label:'Back',keep:true,fn:openJournal},
+ ]);
+}
+function downloadCheat(){
+ const lines=['First 12 Weeks: newborn cheat sheet','Public guidance, summarised. Not medical advice. If you’re worried about your baby, contact your doctor or midwife.',''];
+ unlocked().forEach(c=>lines.push('- '+c.t,'  '+c.b,'  Source: '+c.s,''));
+ try{
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([lines.join('\n')],{type:'text/plain'}));
+  a.download='first-12-weeks-cheat-sheet.txt'; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+ }catch(e){}
+}
 
 function weekIntro(){
  const w=WEEKS[S.week];
@@ -447,7 +479,7 @@ function weekIntro(){
 
 function pct(a,b){return b?Math.round(a/b*100)+'%':'—';}
 function endDay(){
- if(S.inSummary) return; S.inSummary=true;
+ if(S.inSummary) return; S.inSummary=true; AU.day();
  const ws=S.ws; Object.keys(ws).forEach(k=>S.total[k]+=ws[k]);
  save();
  const row=(l,v,n)=>'<div class="stat"><span>'+l+(n?'<small>'+n+'</small>':'')+'</span><span class="v">'+v+'</span></div>';
@@ -479,7 +511,7 @@ function finale(){
   '<div class="stat"><span>Cue reading overall</span><span class="v">'+pct(T.right,T.cues)+'</span></div>'+
   '<div class="stat"><span>Learning cards</span><span class="v">'+S.cards.length+' / '+CARDS.length+'</span></div>'+
   '<h3>Before the real thing</h3><ul><li>Set up a safe sleep space: firm flat mattress, nothing else in the crib.</li><li>Agree how you’ll share nights, and who your “help” people are.</li><li>Save your doctor’s and health visitor’s numbers. Know the fever rule.</li><li>Consider an antenatal or newborn-care class.</li></ul>';
- modal(html,[{label:'Open learning journal',keep:true,fn:openJournal},{label:'Play again',primary:true,fn:()=>{const mm=S.meters; S=fresh(); S.meters=mm; S.started=true; weekIntro();}}]);
+ modal(html,[{label:'Open learning journal',keep:true,fn:openJournal},{label:'Send feedback',keep:true,fn:openFeedback},{label:'Play again',primary:true,fn:()=>{const mm=S.meters; S=fresh(); S.meters=mm; S.started=true; weekIntro();}}]);
 }
 
 function openJournal(){
@@ -489,18 +521,27 @@ function openJournal(){
   CARDS.map(c=>S.cards.includes(c.id)?'<details class="cardx"><summary>'+c.t+'</summary>'+c.b+'<div class="src">Source: '+c.s+'</div></details>':'<div class="cardx locked">🔒 Keep caring to unlock</div>').join('')+
   '<p class="muted" style="font-size:12.5px">Public guidance, summarised. Not medical advice.</p>';
  if(wasOpen&&S.inSummary){
-  modal(html,[{label:'Back',primary:true,fn:()=>{S.inSummary=false; endDayReshow();}}]);
- }else modal(html,[{label:'Close',primary:true}]);
+  modal(html,[{label:'Back',primary:true,fn:()=>{S.inSummary=false; endDayReshow();}},{label:'Cheat sheet (print or save)',keep:true,fn:openCheat}]);
+ }else modal(html,[{label:'Close',primary:true},{label:'Cheat sheet (print or save)',keep:true,fn:openCheat}]);
 }
 function endDayReshow(){Object.keys(S.ws).forEach(k=>S.total[k]-=S.ws[k]); if(S.finished){finale(); return;} endDay();}
 
 function openMenu(){
  const html='<div class="kicker">Settings</div><h2>Options</h2>'+
   '<label class="toggle"><span>Easy mode: need meters & hints</span><input type="checkbox" id="mMeters"'+(S.meters?' checked':'')+'></label>'+
+  '<label class="toggle"><span>Sound</span><input type="checkbox" id="mSound"'+(AU.on?' checked':'')+'></label>'+
+  '<label class="toggle"><span>Baby crying sounds</span><input type="checkbox" id="mCry"'+(AU.cryOn?' checked':'')+'></label>'+
+  '<h3>Feedback</h3><p class="muted" style="font-size:13px">Opens GitHub in a new tab. It’s public, so please leave out personal details.</p>'+
   '<h3>Testing</h3><p class="muted" style="font-size:13px">Jump ahead to try later weeks.</p>';
- const apply=()=>{const el=$('mMeters'); if(el) S.meters=el.checked; render(); save();};
+ const apply=()=>{
+  const el=$('mMeters'); if(el) S.meters=el.checked;
+  const so=$('mSound'), cr=$('mCry'); if(so&&cr) AU.set({on:so.checked,cry:cr.checked});
+  render(); save();
+ };
  modal(html,[
   {label:'Done',primary:true,fn:apply},
+  {label:'Cheat sheet (print or save)',keep:true,fn:()=>{apply(); openCheat();}},
+  {label:'Send feedback',fn:()=>{apply(); openFeedback();}},
   {label:'Skip to end of this day',fn:()=>{apply(); S.min=1440; S.dayOver=true; endDay();}},
   {label:'About & sources',keep:true,fn:()=>{apply(); openAbout();}},
   {label:'Restart from week 1',fn:()=>{apply(); startScreen();}},
@@ -516,7 +557,8 @@ function openAbout(){
   '<li><a href="https://www.cdc.gov/ncbddd/actearly/milestones/" target="_blank" rel="noopener">CDC — Developmental milestones</a></li>'+
   '<li><a href="https://dontshake.org" target="_blank" rel="noopener">National Center on Shaken Baby Syndrome</a></li>'+
   '<li><a href="https://www.thensf.org" target="_blank" rel="noopener">National Sleep Foundation</a></li></ul>'+
-  '<p class="muted" style="font-size:12.5px">Educational only, not medical advice. Content pending clinical review. Follow your midwife, doctor or health visitor.</p>';
+  '<p class="muted" style="font-size:12.5px">Educational only, not medical advice. Content pending clinical review. Follow your midwife, doctor or health visitor.</p>'+
+  '<p><a href="'+FEEDBACK_URL+'" target="_blank" rel="noopener">Send feedback on GitHub</a> <span class="muted" style="font-size:12.5px">(public; please leave out personal details)</span></p>';
  modal(html,[{label:'Close',primary:true}]);
 }
 
@@ -528,6 +570,9 @@ $('bSpeed').onclick=()=>{S.speed=S.speed===1?2:S.speed===2?4:1; render(); save()
 $('bJournal').onclick=()=>{if(!modalOpen) openJournal();};
 $('bMenu').onclick=()=>{if(!modalOpen) openMenu();};
 $('bHealth').onclick=()=>{if(!modalOpen) openHealth();};
+$('bSound').onclick=()=>{AU.set({on:!AU.on}); render();};
+$('fbLink').href=FEEDBACK_URL;
+document.addEventListener('pointerdown',()=>AU.unlock()); // browsers only allow sound after a tap
 document.addEventListener('click',e=>{
  if(!e.target.closest('[data-more]')) return;
  healthMore=!healthMore; lastHealth='';
@@ -537,6 +582,14 @@ document.addEventListener('click',e=>{
 wide.addEventListener&&wide.addEventListener('change',()=>{lastHealth=''; render();});
 $('aboutLink').onclick=e=>{e.preventDefault(); if(!modalOpen) openAbout();};
 
+// What the baby would sound like right now: a soft cry that matches the cue, or a coo when happy.
+function soundInfo(){
+ const b=S.b; if(b.asleep||S.helper>0) return null;
+ const t=top();
+ if(!t||t.k==='bored') return S.flags.smile&&b.sincePlay<30?{kind:'coo',level:'calm'}:null;
+ if(t.k==='bath') return null;
+ return {kind:t.k,level:level(t.v)};
+}
 let ticks=0;
 setInterval(()=>{
  if(!S.started||modalOpen) return;
@@ -546,6 +599,7 @@ setInterval(()=>{
  const n=5*S.speed*fast;
  for(let i=0;i<n&&!S.dayOver;i++) stepMinute();
  if(S.dayOver) endDay();
+ AU.cry(S.dayOver?null:soundInfo());
  render();
  if(++ticks%5===0) save();
 },1000);

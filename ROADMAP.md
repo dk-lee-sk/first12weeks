@@ -21,7 +21,7 @@ One room, 9 actions, cue system, 12 weeks, 24 learning cards, daily summaries, e
   *Done when:* every safety-critical card has a matching scenario and a reviewer sign-off.
 
 ## M3 — Feel
-- Sound via Web Audio (synthesised coos, cries, lullaby hum), with a mute toggle. No copyrighted audio.
+- ✅ Sound via Web Audio (`src/audio.js`): soft cries that match the cue and grow with its level, a coo when happy, an effect for each action, a chime for new cards and finished days, and a quiet noise bed while baby sleeps. Off by default, with a header toggle, a start-screen toggle, and a separate "baby crying sounds" switch. Nothing is recorded or copyrighted. Still to do: tune by ear with real parents, and optional recorded sounds.
 - Richer SVG states: feeding pose, burp on shoulder, bath tub, swaddle/sleep sack.
 - Day/night transitions, a lamp toggle, window weather.
 - Haptics on phones where supported.
@@ -33,7 +33,8 @@ One room, 9 actions, cue system, 12 weeks, 24 learning cards, daily summaries, e
 
 ## M5 — Learning depth
 - End-of-week 3-question check (optional) drawn from unlocked cards.
-- Journal export as a printable "cheat sheet" page.
+- ✅ Printable cheat sheet of unlocked cards (journal → Cheat sheet, or Settings): print / save as PDF, or download as text.
+- ✅ Feedback button (footer, Settings, About, finale) that opens a prefilled GitHub issue. Later: a lighter form for people without a GitHub account.
 - Localisation: string table, then Korean and French.
 
 ## M6 — Distribution & validation
